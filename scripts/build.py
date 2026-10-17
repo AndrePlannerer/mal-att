@@ -5,7 +5,7 @@ Uso:
   python scripts/build.py                 # busca dados ao vivo
   python scripts/build.py --data lista.json   # usa um JSON local (teste)
 """
-import argparse, json, os, socket, sys, time, urllib.request
+import argparse, json, os, re, socket, sys, time, urllib.request
 from collections import Counter
 
 import matplotlib
@@ -51,17 +51,21 @@ def load_list():
     return items
 
 
-def jikan_extra():
-    """Totais oficiais do perfil (dias, capítulos, episódios, completos) — best effort."""
+def profile_totals():
+    """Totais oficiais lidos da página do perfil (dias, episódios, capítulos)."""
     out = {}
     try:
-        d = get_json(f"https://api.jikan.moe/v4/users/{USER}/statistics")["data"]
-        out["days"] = round(float(d["anime"]["days_watched"]))
-        out["chapters"] = int(d["manga"]["chapters_read"])
-        out["episodes"] = int(d["anime"]["episodes_watched"])
-        out["animes"] = int(d["anime"]["completed"])
+        req = urllib.request.Request(f"https://myanimelist.net/profile/{USER}", headers=UA)
+        html = urllib.request.urlopen(req, timeout=30).read().decode("utf-8", "replace")
+        num = lambda t: int(t.replace(",", "").replace(".", ""))
+        days = re.findall(r"Days: </span>([\d,\.]+)", html)
+        eps = re.search(r"Episodes</span><span[^>]*>([\d,]+)</span>", html)
+        chs = re.search(r"Chapters</span><span[^>]*>([\d,]+)</span>", html)
+        out["days"] = round(float(days[0].replace(",", "")))
+        out["episodes"] = num(eps.group(1))
+        out["chapters"] = num(chs.group(1))
     except Exception as e:  # noqa
-        print("aviso: Jikan indisponível:", e, file=sys.stderr)
+        print("aviso: não consegui ler o perfil:", e, file=sys.stderr)
         out["_erro"] = repr(e)[:300]
     return out
 
@@ -138,7 +142,7 @@ def chart_stats(st):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--data")
-    ap.add_argument("--no-jikan", action="store_true")
+    ap.add_argument("--no-profile", action="store_true")
     args = ap.parse_args()
     os.makedirs(OUT, exist_ok=True)
     setup_style()
@@ -156,11 +160,11 @@ def main():
         "episodes": sum(int(i.get("num_watched_episodes") or 0) for i in items),
         "days": old.get("days", 356), "chapters": old.get("chapters", 35158),
     }
-    if not args.data and not args.no_jikan:
-        extra = jikan_extra()
+    if not args.data and not args.no_profile:
+        extra = profile_totals()
         erro = extra.pop("_erro", None)
         st.update(extra)
-        json.dump({"jikan_ok": erro is None, "erro": erro},
+        json.dump({"perfil_ok": erro is None, "erro": erro},
                   open(os.path.join(ROOT, "status.json"), "w"), indent=2, ensure_ascii=False)
 
     chart_scores(scores)
