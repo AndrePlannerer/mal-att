@@ -1,4 +1,4 @@
 {
   "jikan_ok": false,
-  "erro": "URLError(OSError(101, 'Network is unreachable'))"
+  "erro": "URLError(TimeoutError('timed out'))"
 }
