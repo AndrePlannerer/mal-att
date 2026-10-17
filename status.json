@@ -1,4 +1,4 @@
 {
-  "jikan_ok": false,
-  "erro": "URLError(TimeoutError('timed out'))"
+  "perfil_ok": true,
+  "erro": null
 }
