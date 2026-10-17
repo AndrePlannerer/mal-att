@@ -5,13 +5,17 @@ Uso:
   python scripts/build.py                 # busca dados ao vivo
   python scripts/build.py --data lista.json   # usa um JSON local (teste)
 """
-import argparse, json, os, sys, time, urllib.request
+import argparse, json, os, socket, sys, time, urllib.request
 from collections import Counter
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib import font_manager
+
+# Alguns runners não têm rota IPv6; força IPv4.
+_gai = socket.getaddrinfo
+socket.getaddrinfo = lambda h, p, f=0, *a, **k: _gai(h, p, socket.AF_INET, *a, **k)
 
 USER = os.environ.get("MAL_USER", "Vleber_23")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
