@@ -48,12 +48,14 @@ def load_list():
 
 
 def jikan_extra():
-    """days_watched e capítulos lidos (best effort)."""
+    """Totais oficiais do perfil (dias, capítulos, episódios, completos) — best effort."""
     out = {}
     try:
         d = get_json(f"https://api.jikan.moe/v4/users/{USER}/statistics")["data"]
         out["days"] = round(float(d["anime"]["days_watched"]))
         out["chapters"] = int(d["manga"]["chapters_read"])
+        out["episodes"] = int(d["anime"]["episodes_watched"])
+        out["animes"] = int(d["anime"]["completed"])
     except Exception as e:  # noqa
         print("aviso: Jikan indisponível:", e, file=sys.stderr)
     return out
