@@ -1,0 +1,26 @@
+name: Atualizar gráficos do MAL
+
+on:
+  schedule:
+    - cron: "17 6 * * *"   # todo dia, 03:17 no horário de Brasília
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install matplotlib
+      - run: python scripts/build.py
+      - name: Commit se mudou
+        run: |
+          git config user.name "mal-att bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add charts stats.json
+          git diff --cached --quiet || (git commit -m "Atualiza gráficos" && git push)
