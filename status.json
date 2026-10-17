@@ -1,0 +1,4 @@
+{
+  "jikan_ok": false,
+  "erro": "URLError(OSError(101, 'Network is unreachable'))"
+}
