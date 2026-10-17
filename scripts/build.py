@@ -58,6 +58,7 @@ def jikan_extra():
         out["animes"] = int(d["anime"]["completed"])
     except Exception as e:  # noqa
         print("aviso: Jikan indisponível:", e, file=sys.stderr)
+        out["_erro"] = repr(e)[:300]
     return out
 
 
@@ -152,7 +153,11 @@ def main():
         "days": old.get("days", 356), "chapters": old.get("chapters", 35158),
     }
     if not args.data and not args.no_jikan:
-        st.update(jikan_extra())
+        extra = jikan_extra()
+        erro = extra.pop("_erro", None)
+        st.update(extra)
+        json.dump({"jikan_ok": erro is None, "erro": erro},
+                  open(os.path.join(ROOT, "status.json"), "w"), indent=2, ensure_ascii=False)
 
     chart_scores(scores)
     if genres:
